@@ -1,0 +1,57 @@
+﻿Overview:
+        This game is a 2d platformer PvP and PvE shooter. It will have multiple game modes like Deathmatch, TDM, Gun Game, and Capture the Flag, and the player will be able to customize their character and unlock new characters and weapons.
+
+
+Goal:
+        Provide fun, high-intensity, and rewarding shooter gameplay in the short term, with a rewarding and competitive overarching experience through things like unlockable content, leaderboards, and customization. The objective of the game is to be able to be fun for both players who visit the website for the first time, as well as long-term players who make an account, grinding to level up and unlock new things. Like a 2d platformer version of Krunker.
+
+
+Target Audience:
+        Casual to competitive gamers.
+
+
+Design:
+
+
+Navigation/Flow:
+1. Start Screen
+   1. Has a log-in button as well as play as a guest button that locks the unlockable/progression features, only making the core gameplay/gamemodes accessible
+2. Main Menu
+   1. Player Profile
+      1. Has info: player name, password, account level, and stats
+   2. Class selection + customization
+      1. A menu that shows all classes(characters with a unique weapon/playstyle), a level 1 player (or unlogged-in player) having access to the starter basic classes, and with account level progression, can unlock new classes.
+      2. When a class/character is unlocked, customization for that class will be available in their own menu within the class selection menu. Customization options will be unlockable through methods such as in-game challenges like kill requirements headshots etc, or experience with that class, classes gaining experience when the player uses them in a game.
+      3. Each class should have unique playstyles, but all be balanced so that no unfair advantage is gained over a player with only access to the base characters. More about each character/character examples will be outlined later
+   3. Options
+      1. Basic options menu with things like volume sliders and sensitivity sliders
+   4. Join game/host game button
+      1. The host game button allows the user to choose from all game modes and maps, customizing the lobby with available options. Once the player is done and hits “host game”, it opens a public waiting room lobby that shows up in the join game menu with info about that lobby like game mode, number of current players, and lobby name that the host can set.
+      2. As a host in the waiting room of a lobby, you can choose to fill empty player slots with NPCs if people aren't joining.
+      3. The host will then be able to start the game when multiple players have joined and everyone is ready or they have added sufficient NPCs to play against
+      4. The join game button, as previously mentioned, will give a list of currently available lobbies, displaying their info, and allowing players to join the lobby of their choosing. Once in the lobby, they will choose their class and can “ready”. If a game is currently going on, the joined player can spectate, watching until the game is over and joining the waiting room afterward.
+   5. Leaderboards
+      1. A menu button that allows players to navigate through menus displaying multiple kinds of leaderboards for things like top players stats on different maps etc.
+
+
+Gameplay:
+        In all gamemodes, the movement should be fluid, players able to run, jump, wall jump, and crouch to navigate the multi-layered maps. Should give the player a sense of weight and momentum but keeping it feeling fast paced and energetic. Some characters might be heavier or slower than others depending on the classes playstyle.
+1. Classes gameplay
+   1. Each class should have its own balanced strengths and weaknesses. Some might have faster movement but with lower health, like an uzi character, or a sniper, while others would be slower but be more tanky. 
+   2. Weapons should range widely and be the defining feature of each class. To start out, maybe like: rifle class, shotgun class, deagle class, uzi class, sniper class, crossbow class, submachine gun, heavy machinegun. Each weapon will have distinct stats such as damage, fire rate, accuracy, range/damage scaling, and ammo.
+2. Inputs/controls
+   1. Basic platformer controls: a and d for left right, space for jump, ctrl crouch, mouse1 shoot, r reload, q melee.
+   2. The character should be centered on the screen, but slighly shift in the direction of where the mouse is. For example, if the mouse is way on the right side of the screen, the frame would “look” right, giving the player vision slightly further in the direction of where they are aiming.
+3. Modes
+   1. Basic self explanatory modes like deathmatch, tdm, and gungame, each round having a time limit or score to reach before the game ends. At the end of a round, the leaderboard should show up with relevant stats for that gamemode, such as K/D/A, and other more specific things.
+
+
+Aesthetics:
+        The game should be in a cartoonish art style, with flash game era animation/art/design. The 2d should be simple and polished. The maps should be dynamic and thematic, with locations ranging from cityscapes to a moving train to a space station. Here are some examples of what sprite and map designs might look like: (perhaps the level designs slightly more gritty and rugged)
+    
+  
+
+
+
+Sound Design:
+        Sound should be simple and distinguish classes by the sound of their weapons. Heavy thuds of the characters falling, footstep sounds when running, distinct firing sounds that distinguish things like a shotgun blast vs sniper shot, etc. there should also be ambient sound depending on the map such as wind, distant explosions, city noises, high tech lab noises, etc. the soundtrack should be fast paced, like a scifi movie from the early 2000s, something techy and electronic, as well as ramping up as the game continues. There should also be sound effects for things such as kills, killstreaks, and victories, that give a rewarding sensory response when the player does something cool. If you haven't played valorant, something exactly like the kill sound effect in that game, that shit is so satisfying. The menu should also have crisp and satisfying ui sound effects, like button clicks and selections, as well as more chill music in the same genre of the gameplay music.
