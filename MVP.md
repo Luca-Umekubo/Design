@@ -1,3 +1,17 @@
+1) Game Engine
+
+Phaser - Easy to understand, popular, lots of plugins
+
+2) 2d Map Plugin
+
+Tiled Map Editor + Phaser Plugin
+
+3) Networking Library
+
+PeerJS - Fast local connections, no need for external server, less confusing than alternatives
+
+Here is the complete breakdown of each class, with all methods and variables listed as per the flowchart details.
+
 Main (P0)
 Variables
 
