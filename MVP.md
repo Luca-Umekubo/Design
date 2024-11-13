@@ -118,3 +118,23 @@ Variables
 Methods
 
 (P1) updatePoints (gameModeIndex): Updates player points based on game mode rules.
+
+
+
+P0 Sprint:
+
+Basic movement system
+Simple shooting mechanics
+Core networking (join/host)
+Basic map loading
+Simple login system
+
+
+P1 Sprint :
+
+Points system
+Health system
+Weapon variations
+Additional game modes
+Better networking features
+
