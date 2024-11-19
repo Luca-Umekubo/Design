@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fast-Paced 2D Platformer Shooter</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+    <script src="Player.js"></script>
+    <script src="Enemy.js"></script>
+</head>
+<body>
+    <script>
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 1200 },
+                    debug: false
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+
+        const game = new Phaser.Game(config);
+
+        let player;
+        let enemy;
+        let bullets;
+        let platforms;
+
+        function preload() {
+            // No external assets needed
+        }
+
+
+        function create() {
+          // Platforms group
+          platforms = this.physics.add.staticGroup();
+
+          // Ground and floating platforms
+          const ground = this.add.rectangle(400, 580, 800, 20, 0x00ff00);
+          this.physics.add.existing(ground, true);
+          platforms.add(ground);
+
+          const platform1 = this.add.rectangle(200, 450, 100, 20, 0x00ff00);
+          const platform2 = this.add.rectangle(600, 350, 100, 20, 0x00ff00);
+          const platform3 = this.add.rectangle(400, 200, 100, 20, 0x00ff00);
+
+          [platform1, platform2, platform3].forEach(platform => {
+            this.physics.add.existing(platform, true);
+            platforms.add(platform);
+          });
+
+          this.platforms = platforms;
+
+          // Player instance
+          player = new Player(this, 100, 450);
+
+          // Enemy instance
+          enemy = new Enemy(this, 600, 300, platforms); // Pass platforms group
+
+          // Bullets group
+          bullets = this.physics.add.group();
+
+          // Add collision between bullets and platforms
+          this.physics.add.collider(bullets, platforms, bulletHitPlatform, null, this);
+
+          // Mouse click to shoot
+          this.input.on('pointerdown', (pointer) => {
+            const bullet = this.add.circle(player.sprite.x, player.sprite.y, 5, 0xffff00);
+            this.physics.add.existing(bullet);
+            bullets.add(bullet);
+
+            const direction = new Phaser.Math.Vector2(pointer.x - player.sprite.x, pointer.y - player.sprite.y).normalize();
+            const speed = 1000;
+            bullet.body.setVelocity(direction.x * speed, direction.y * speed);
+            bullet.body.allowGravity = false;
+
+            // Add collision detection for the bullet hitting the enemy
+            this.physics.add.collider(bullet, enemy.sprite, () => {
+              bullet.destroy();
+              enemy.updateHealth(enemy.currentHealth - 10); // Example damage
+              if (enemy.currentHealth <= 0) {
+                enemy.destroy();
+              }
+            });
+          });
+        }
+
+
+        function update() {
+            // Update player
+            player.update();
+
+            // Update enemy
+            enemy.update();
+
+            // Bullet cleanup
+            bullets.children.each((bullet) => {
+                if (bullet.active && (bullet.x < 0 || bullet.x > 800 || bullet.y < 0 || bullet.y > 600)) {
+                    bullet.destroy();
+                }
+            });
+        }
+
+        // Callback function for bullet-platform collision
+        function bulletHitPlatform(bullet, platform) {
+            bullet.destroy();
+        }
+    </script>
+</body>
+</html>
