@@ -84,7 +84,7 @@
             bullet.body.allowGravity = false;
 
             // Add collision detection for the bullet hitting the enemy
-            this.physics.add.collider(bullet, enemy.sprite, () => {
+            this.physics.add.overlap(bullet, enemy.sprite, () => {
               bullet.destroy();
               enemy.updateHealth(enemy.currentHealth - 10); // Example damage
               if (enemy.currentHealth <= 0) {
