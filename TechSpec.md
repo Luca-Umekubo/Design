@@ -6,7 +6,7 @@ Phaser - Easy to understand, popular, lots of plugins
 
 2) 2d Map Plugin
 
-Tiled Map Editor + Phaser Plugin
+Tiled Map Editor + Phaser Plugin ( has a placeholder now using phaser generation, needs to be implemented)
 
 3) Networking Library
 
