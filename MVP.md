@@ -112,17 +112,19 @@ This MVP defines the core features and outlines the work completed, placeholders
 
 ## Next Steps and Timeline
 
-### Day 1-2
+### Day 1-2 (need to make global leaderboard tab)
 
 1. Finalize player and enemy respawn logic.
 2. Implement scoring system to track kills.
    - Add a scoreboard at the top of the screen.
    - When click tab, global leaderboard appears
 
-### Day 3
+### Day 3(Fully done)
 
 1. Add a game timer with match duration (e.g., 2 minutes).
+   - DONE
 2. Integrate timer with match reset logic (e.g., clear scores and respawn players/enemies).
+   - DONE
 
 ### Day 4-5
 
