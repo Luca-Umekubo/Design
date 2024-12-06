@@ -35,65 +35,110 @@
         let bullets;
         let platforms;
 
+        let timeLeft = 120; // 2 minutes in seconds
+        let timerText;
+        let killText;
+        let deathText;
+
         function preload() {
             // No external assets needed
         }
 
-
         function create() {
-          // Platforms group
-          platforms = this.physics.add.staticGroup();
+            // Platforms group
+            platforms = this.physics.add.staticGroup();
 
-          // Ground and floating platforms
-          const ground = this.add.rectangle(400, 580, 800, 20, 0x00ff00);
-          this.physics.add.existing(ground, true);
-          platforms.add(ground);
+            // Ground and floating platforms
+            const ground = this.add.rectangle(400, 580, 800, 20, 0x00ff00);
+            this.physics.add.existing(ground, true);
+            platforms.add(ground);
 
-          const platform1 = this.add.rectangle(200, 450, 100, 20, 0x00ff00);
-          const platform2 = this.add.rectangle(600, 350, 100, 20, 0x00ff00);
-          const platform3 = this.add.rectangle(400, 200, 100, 20, 0x00ff00);
+            const platform1 = this.add.rectangle(200, 450, 100, 20, 0x00ff00);
+            const platform2 = this.add.rectangle(600, 350, 100, 20, 0x00ff00);
+            const platform3 = this.add.rectangle(400, 200, 100, 20, 0x00ff00);
 
-          [platform1, platform2, platform3].forEach(platform => {
-            this.physics.add.existing(platform, true);
-            platforms.add(platform);
-          });
-
-          this.platforms = platforms;
-
-          // Player instance
-          player = new Player(this, 100, 450);
-
-          // Enemy instance
-          enemy = new Enemy(this, 600, 300, platforms); // Pass platforms group
-
-          // Bullets group
-          bullets = this.physics.add.group();
-
-          // Add collision between bullets and platforms
-          this.physics.add.collider(bullets, platforms, bulletHitPlatform, null, this);
-
-          // Mouse click to shoot
-          this.input.on('pointerdown', (pointer) => {
-            const bullet = this.add.circle(player.sprite.x, player.sprite.y, 5, 0xffff00);
-            this.physics.add.existing(bullet);
-            bullets.add(bullet);
-
-            const direction = new Phaser.Math.Vector2(pointer.x - player.sprite.x, pointer.y - player.sprite.y).normalize();
-            const speed = 1000;
-            bullet.body.setVelocity(direction.x * speed, direction.y * speed);
-            bullet.body.allowGravity = false;
-
-            // Add collision detection for the bullet hitting the enemy
-            this.physics.add.overlap(bullet, enemy.sprite, () => {
-              bullet.destroy();
-              enemy.updateHealth(enemy.currentHealth - 10); // Example damage
-              if (enemy.currentHealth <= 0) {
-                enemy.destroy();
-              }
+            [platform1, platform2, platform3].forEach(platform => {
+                this.physics.add.existing(platform, true);
+                platforms.add(platform);
             });
-          });
-        }
 
+            this.platforms = platforms;
+
+            // Player instance
+            player = new Player(this, 100, 450);
+
+            // Enemy instance
+            enemy = new Enemy(this, 600, 300, platforms);
+
+            // Bullets group
+            bullets = this.physics.add.group();
+            this.physics.add.collider(bullets, platforms, bulletHitPlatform, null, this);
+
+            // Add text for Timer, Kill Counter, and Death Counter
+            timerText = this.add.text(this.cameras.main.width / 2, 20, '2:00', {
+                fontSize: '32px',
+                fill: '#00ff00'
+            }).setOrigin(0.5);
+
+            killText = this.add.text(this.cameras.main.width / 2, 60, 'Kill Counter: 0', {
+                fontSize: '24px',
+                fill: '#00ff00'
+            }).setOrigin(0.5);
+
+            deathText = this.add.text(this.cameras.main.width / 2, 100, 'Death Counter: 0', {
+                fontSize: '24px',
+                fill: '#00ff00'
+            }).setOrigin(0.5);
+
+            // Set up the countdown timer event
+            this.time.addEvent({
+                delay: 1000,
+                loop: true,
+                callback: () => {
+                    timeLeft--;
+                    if (timeLeft <= 0) {
+                        // Reset to 2:00
+                        timeLeft = 120;
+                        // Reset player kills and deaths to 0
+                        player.kills = 0;
+                        player.deaths = 0;
+
+                        // Respawn player and enemy to their initial states
+                        player.respawn();
+                        enemy.respawn();
+                    }
+
+                    // Update the timer display
+                    let minutes = Math.floor(timeLeft / 60);
+                    let seconds = timeLeft % 60;
+                    let timeString = minutes + ':' + (seconds < 10 ? '0' + seconds : seconds);
+                    timerText.setText(timeString);
+                }
+            });
+
+            // Mouse click to shoot
+            this.input.on('pointerdown', (pointer) => {
+                const bullet = this.add.circle(player.sprite.x, player.sprite.y, 5, 0xffff00);
+                this.physics.add.existing(bullet);
+                bullets.add(bullet);
+
+                const direction = new Phaser.Math.Vector2(pointer.x - player.sprite.x, pointer.y - player.sprite.y).normalize();
+                const speed = 1000;
+                bullet.body.setVelocity(direction.x * speed, direction.y * speed);
+                bullet.body.allowGravity = false;
+
+                // Add collision detection for the bullet hitting the enemy
+                this.physics.add.overlap(bullet, enemy.sprite, () => {
+                    bullet.destroy();
+                    enemy.updateHealth(enemy.currentHealth - 10); // Example damage
+                    if (enemy.currentHealth <= 0) {
+                        enemy.destroy();
+                        // Player killed the enemy, increment player's kills
+                        player.incrementKills();
+                    }
+                });
+            });
+        }
 
         function update() {
             // Update player
@@ -101,6 +146,10 @@
 
             // Update enemy
             enemy.update();
+
+            // Update Kill and Death counters every frame from player's stats
+            killText.setText("Kill Counter: " + player.kills);
+            deathText.setText("Death Counter: " + player.deaths);
 
             // Bullet cleanup
             bullets.children.each((bullet) => {
