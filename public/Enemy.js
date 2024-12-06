@@ -60,8 +60,12 @@ class Enemy {
       this.scene.physics.add.overlap(bullet, player.sprite, () => {
         bullet.destroy();
         player.updateHealth(player.currentHealth - 10);
-        this.incrementKills();
-      });
+    
+        // Increment kills only if the player dies
+        if (player.currentHealth <= 0) {
+            this.incrementKills();
+        }
+      });    
     }
       
     destroy() {
