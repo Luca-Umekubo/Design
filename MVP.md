@@ -112,9 +112,9 @@ This MVP defines the core features and outlines the work completed, placeholders
 
 ## Next Steps and Timeline
 
-### Day 1-2 (make lb global)
+### Day 2
 
-1. update leaderboard to make it global
+1. update leaderboard to make it work for multiplayer
 
 ### Day 3(Fully done)
 
