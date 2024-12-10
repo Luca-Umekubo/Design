@@ -112,12 +112,9 @@ This MVP defines the core features and outlines the work completed, placeholders
 
 ## Next Steps and Timeline
 
-### Day 1-2 (need to make global leaderboard tab)
+### Day 1-2 (make lb global)
 
-1. Finalize player and enemy respawn logic.
-2. Implement scoring system to track kills.
-   - Add a scoreboard at the top of the screen.
-   - When click tab, global leaderboard appears
+1. update leaderboard to make it global
 
 ### Day 3(Fully done)
 

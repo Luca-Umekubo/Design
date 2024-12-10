@@ -39,6 +39,7 @@
         let timerText;
         let killText;
         let deathText;
+        let gameOver = false;
 
         function preload() {
             // No external assets needed
@@ -95,24 +96,15 @@
                 delay: 1000,
                 loop: true,
                 callback: () => {
-                    timeLeft--;
-                    if (timeLeft <= 0) {
-                        // Reset to 2:00
-                        timeLeft = 120;
-                        // Reset player kills and deaths to 0
-                        player.kills = 0;
-                        player.deaths = 0;
-
-                        // Respawn player and enemy to their initial states
-                        player.respawn();
-                        enemy.respawn();
+                    if (!gameOver) { // Only update the timer if the game is not over
+                        timeLeft--;
+                        if (timeLeft <= 0) {
+                            endGame(this); // Pass the current scene to `endGame`
+                        }
+                        let minutes = Math.floor(timeLeft / 60);
+                        let seconds = timeLeft % 60;
+                        timerText.setText(minutes + ':' + (seconds < 10 ? '0' + seconds : seconds));
                     }
-
-                    // Update the timer display
-                    let minutes = Math.floor(timeLeft / 60);
-                    let seconds = timeLeft % 60;
-                    let timeString = minutes + ':' + (seconds < 10 ? '0' + seconds : seconds);
-                    timerText.setText(timeString);
                 }
             });
 
@@ -163,6 +155,168 @@
         function bulletHitPlatform(bullet, platform) {
             bullet.destroy();
         }
+
+        let endScreen; // End screen container
+
+        function createEndScreen(scene) {
+            // Create the black background
+            const background = scene.add.rectangle(scene.cameras.main.width / 2, scene.cameras.main.height / 2, 800, 600, 0x000000).setOrigin(0.5);
+            background.setAlpha(0); // Start invisible
+
+            // Create a container for the scoreboard
+            const container = scene.add.container(scene.cameras.main.width / 2 - 100, scene.cameras.main.height / 2).setAlpha(0).setScale(0);
+
+            // Add a title
+            const title = scene.add.text(0, -250, 'GAME OVER', {
+                fontSize: '40px',
+                color: '#00ff00',
+                align: 'center'
+            }).setOrigin(0.5);
+            container.add(title);
+
+            // Add the player list
+            const players = [
+                { name: 'Player 1', kills: player.kills, deaths: player.deaths },
+                { name: 'Enemy', kills: enemy.kills, deaths: enemy.deaths }
+            ];
+            const maxNameLength = Math.max(...players.map(p => p.name.length));
+            const maxKDLength = Math.max(...players.map(p => `${(p.kills / Math.max(1, p.deaths)).toFixed(2)}`.length));
+            let offsetY = -200;
+
+            players.forEach((p, index) => {
+                const isPlayer = p.name === 'Player 1'; // Highlight the player row
+
+                const nameText = scene.add.text(-200, offsetY, p.name.padEnd(maxNameLength + 5), {
+                    fontSize: '20px',
+                    color: isPlayer ? '#00ff00' : '#ffffff'
+                }).setOrigin(0);
+                const statsText = scene.add.text(50, offsetY, `K: ${p.kills} | D: ${p.deaths} | K/D: ${(p.kills / Math.max(1, p.deaths)).toFixed(2)}`.padStart(maxKDLength), {
+                    fontSize: '20px',
+                    color: isPlayer ? '#00ff00' : '#ffffff'
+                }).setOrigin(0);
+                container.add(nameText);
+                container.add(statsText);
+                offsetY += 40;
+            });
+
+            // Add a restart button
+            const restartButton = scene.add.text(0, 200, 'Restart', {
+                fontSize: '30px',
+                color: '#00ff00',
+                backgroundColor: '#000000',
+                padding: { x: 10, y: 5 }
+            }).setOrigin(0.5).setInteractive();
+
+            restartButton.on('pointerdown', () => {
+                restartGame(scene); // Call the restartGame function
+            });
+
+            container.add(restartButton);
+
+            // Add container to the scene
+            scene.add.existing(container);
+
+            // Animate the appearance
+            scene.tweens.add({
+                targets: [background, container],
+                alpha: 1,
+                scale: 1,
+                duration: 500,
+                ease: 'Back.easeOut'
+            });
+
+            // Save for later access
+            endScreen = container;
+        }
+
+        function endGame(scene) {
+            if (gameOver) return; // Prevent multiple calls
+            gameOver = true; // Set the flag to true
+
+            // Stop the game logic
+            scene.physics.pause();
+
+            // Display the scoreboard
+            createEndScreen(scene);
+        }
+
+
+        // Replace the timer's callback
+        this.time.addEvent({
+            delay: 1000,
+            loop: true,
+            callback: () => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                timerText.setText(minutes + ':' + (seconds < 10 ? '0' + seconds : seconds));
+            }
+        });
+
+        function restartGame(scene) {
+            gameOver = false; // Reset the gameOver flag
+            timeLeft = 120; // Reset the timer to 2 minutes
+
+            // Remove all previous game objects
+            scene.children.removeAll(); // Removes all children, including platforms, text, and end screen
+
+            // Recreate platforms
+            platforms = scene.physics.add.staticGroup();
+            const ground = scene.add.rectangle(400, 580, 800, 20, 0x00ff00);
+            scene.physics.add.existing(ground, true);
+            platforms.add(ground);
+
+            const platform1 = scene.add.rectangle(200, 450, 100, 20, 0x00ff00);
+            const platform2 = scene.add.rectangle(600, 350, 100, 20, 0x00ff00);
+            const platform3 = scene.add.rectangle(400, 200, 100, 20, 0x00ff00);
+
+            [platform1, platform2, platform3].forEach(platform => {
+                scene.physics.add.existing(platform, true);
+                platforms.add(platform);
+            });
+
+            // Reset player
+            player = new Player(scene, 100, 450); // Recreate the player
+            player.kills = 0;
+            player.deaths = 0;
+
+            // Reset enemy
+            enemy = new Enemy(scene, 600, 300, platforms); // Recreate the enemy
+            enemy.kills = 0;
+            enemy.deaths = 0;
+
+            // Recreate bullets group
+            bullets = scene.physics.add.group();
+            scene.physics.add.collider(bullets, platforms, bulletHitPlatform, null, scene);
+
+            // Recreate UI text
+            timerText = scene.add.text(scene.cameras.main.width / 2, 20, '2:00', {
+                fontSize: '32px',
+                fill: '#00ff00'
+            }).setOrigin(0.5);
+
+            killText = scene.add.text(scene.cameras.main.width / 2, 60, 'Kill Counter: 0', {
+                fontSize: '24px',
+                fill: '#00ff00'
+            }).setOrigin(0.5);
+
+            deathText = scene.add.text(scene.cameras.main.width / 2, 100, 'Death Counter: 0', {
+                fontSize: '24px',
+                fill: '#00ff00'
+            }).setOrigin(0.5);
+
+            // Resume physics and game logic
+            scene.physics.resume();
+
+            // Destroy the end screen
+            if (endScreen) {
+                endScreen.destroy();
+            }
+        }
+
     </script>
 </body>
 </html>
