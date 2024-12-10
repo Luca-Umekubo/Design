@@ -1,32 +1,41 @@
 class Enemy {
-    constructor(scene, x, y, platforms) {
-      this.scene = scene;
-      this.startX = x;
-      this.startY = y;
-      this.platforms = platforms;
-      
-      this.sprite = scene.add.rectangle(x, y, 40, 40, 0x0000ff);
-      scene.physics.add.existing(this.sprite);
-      this.sprite.body.setCollideWorldBounds(true);
-      this.sprite.body.setImmovable(false);
-  
-      scene.physics.add.collider(this.sprite, platforms);
-  
-      this.maxHealth = 100;
-      this.currentHealth = this.maxHealth;
-  
-      // Score and death tracking
-      this.kills = 0;
-      this.deaths = 0;
-  
-      this.healthBarBackground = scene.add.rectangle(x, y - 50, 60, 10, 0x000000);
-      this.healthBar = scene.add.rectangle(x, y - 50, 60, 10, 0xff0000);
-  
-      this.shootInterval = 2000;
-      this.shootTimer = setInterval(() => this.shoot(), this.shootInterval);
+  constructor(scene, x, y, platforms) {
+    this.scene = scene;
+    this.startX = x;
+    this.startY = y;
+    this.platforms = platforms;
 
-      this.isAlive = true;
-    }
+    this.sprite = scene.add.rectangle(x, y, 40, 40, 0x0000ff);
+    scene.physics.add.existing(this.sprite);
+    this.sprite.body.setCollideWorldBounds(true);
+
+    //jumps
+    this.jumpInterval = 2500; // Enemy will attempt to jump every 5 seconds
+    this.jumpTimer = setInterval(() => this.jump(), this.jumpInterval);
+
+    // Patrol boundaries
+    this.leftBound = x - 200;  // enemy will move up to 200px to the left of its start
+    this.rightBound = x + 200; // enemy will move up to 200px to the right of its start
+
+    // Initial direction and speed
+    this.movingRight = true;
+    this.speed = 125;
+
+    scene.physics.add.collider(this.sprite, platforms);
+
+    this.maxHealth = 100;
+    this.currentHealth = this.maxHealth;
+    this.kills = 0;
+    this.deaths = 0;
+
+    this.healthBarBackground = scene.add.rectangle(x, y - 50, 60, 10, 0x000000);
+    this.healthBar = scene.add.rectangle(x, y - 50, 60, 10, 0xff0000);
+
+    this.shootInterval = 200;
+    this.shootTimer = setInterval(() => this.shoot(), this.shootInterval);
+
+    this.isAlive = true;
+}
   
     updateHealth(newHealth) {
       this.currentHealth = Phaser.Math.Clamp(newHealth, 0, this.maxHealth);
@@ -49,7 +58,7 @@ class Enemy {
         player.sprite.y - this.sprite.y
       ).normalize();
       
-      const speed = 600;
+      const speed = 700;
       bullet.body.setVelocity(direction.x * speed, direction.y * speed);
       bullet.body.allowGravity = false;
       
@@ -67,9 +76,18 @@ class Enemy {
         }
       });    
     }
+
+    jump() {
+      // Only jump if alive and on the ground
+      if (this.isAlive && this.sprite.body.blocked.down) {
+        // Adjust the velocity as needed for desired jump height
+        this.sprite.body.setVelocityY(-600);
+      }
+    }
       
     destroy() {
       clearInterval(this.shootTimer);
+      clearInterval(this.jumpTimer); // Clear jump interval
       this.sprite.destroy();
       this.healthBar.destroy();
       this.healthBarBackground.destroy();
@@ -81,6 +99,7 @@ class Enemy {
       this.isAlive = false;
       this.deaths++;
       clearInterval(this.shootTimer);
+      clearInterval(this.jumpTimer); // Clear jump interval
       
       this.sprite.setVisible(false);
       this.healthBar.setVisible(false);
@@ -90,12 +109,30 @@ class Enemy {
     }
   
     update() {
+      // Update the enemy's movement only if alive
+      if (this.isAlive) {
+          if (this.movingRight) {
+              this.sprite.body.setVelocityX(this.speed);
+              if (this.sprite.x >= this.rightBound) {
+                  this.movingRight = false;
+              }
+          } else {
+              this.sprite.body.setVelocityX(-this.speed);
+              if (this.sprite.x <= this.leftBound) {
+                  this.movingRight = true;
+              }
+          }
+      } else {
+          this.sprite.body.setVelocityX(0);
+      }
+
+      // Update health bar positions
       this.healthBar.x = this.sprite.x;
       this.healthBar.y = this.sprite.y - 50;
-  
+
       this.healthBarBackground.x = this.sprite.x;
       this.healthBarBackground.y = this.sprite.y - 50;
-    }
+  }
 
     respawn() {
       if (this.sprite) this.sprite.destroy();
@@ -120,6 +157,7 @@ class Enemy {
   
       this.isAlive = true;
       this.shootTimer = setInterval(() => this.shoot(), this.shootInterval);
+      this.jumpTimer = setInterval(() => this.jump(), this.jumpInterval);
     }
 
     incrementKills() {
