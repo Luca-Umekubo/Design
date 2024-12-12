@@ -145,7 +145,7 @@
 
             // Bullet cleanup
             bullets.children.each((bullet) => {
-                if (bullet.active && (bullet.x < 0 || bullet.x > 800 || bullet.y < 0 || bullet.y > 600)) {
+                if (bullet.active && (bullet.x < 0 || bullet.x > 1000 || bullet.y < 0 || bullet.y > 600)) {
                     bullet.destroy();
                 }
             });
@@ -160,7 +160,7 @@
 
         function createEndScreen(scene) {
             // Create the black background
-            const background = scene.add.rectangle(scene.cameras.main.width / 2, scene.cameras.main.height / 2, 800, 600, 0x000000).setOrigin(0.5);
+            const background = scene.add.rectangle(scene.cameras.main.width / 2, scene.cameras.main.height / 2, 1000, 600, 0x000000).setOrigin(0.5);
             background.setAlpha(0); // Start invisible
 
             // Create a container for the scoreboard
@@ -232,6 +232,7 @@
         function endGame(scene) {
     if (gameOver) return;
     gameOver = true;
+    scene.gameOver = true;
     
     // Stop physics and remove input events
     scene.physics.pause();
@@ -264,7 +265,7 @@
 
             // Recreate platforms
             platforms = scene.physics.add.staticGroup();
-            const ground = scene.add.rectangle(400, 580, 800, 20, 0x00ff00);
+            const ground = scene.add.rectangle(400, 580, 1000, 20, 0x00ff00);
             scene.physics.add.existing(ground, true);
             platforms.add(ground);
 

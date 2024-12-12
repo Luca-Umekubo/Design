@@ -48,7 +48,7 @@ class Enemy {
     }
   
     shoot() {
-      if (this.currentHealth <= 0 || !this.isAlive) return;
+      if (!this.isAlive || !player.isAlive) return;
       
       const bullet = this.scene.add.circle(this.sprite.x, this.sprite.y, 5, 0xffff00);
       this.scene.physics.add.existing(bullet);
@@ -104,8 +104,11 @@ class Enemy {
       this.sprite.setVisible(false);
       this.healthBar.setVisible(false);
       this.healthBarBackground.setVisible(false);
+      this.sprite.body.enable = false;
   
-      setTimeout(() => this.respawn(), 5000);
+      if (!this.scene.gameOver) {
+        setTimeout(() => this.respawn(), 5000);
+    }
     }
   
     update() {
@@ -135,6 +138,7 @@ class Enemy {
   }
 
     respawn() {
+      if (this.scene.gameOver) return;
       if (this.sprite) this.sprite.destroy();
       this.sprite = this.scene.add.rectangle(this.startX, this.startY, 40, 40, 0x0000ff);
       this.scene.physics.add.existing(this.sprite);
@@ -154,6 +158,7 @@ class Enemy {
       this.sprite.setVisible(true);
       this.healthBar.setVisible(true);
       this.healthBarBackground.setVisible(true);
+      this.sprite.body.enable = true;
   
       this.isAlive = true;
       this.shootTimer = setInterval(() => this.shoot(), this.shootInterval);
