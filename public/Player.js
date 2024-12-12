@@ -105,15 +105,11 @@ class Player {
       this.sprite.setVisible(false);
       this.healthBar.setVisible(false);
       this.healthBarBackground.setVisible(false);
-      this.sprite.body.enable = false;
   
-      if (!this.scene.gameOver) {
-        setTimeout(() => this.respawn(), 5000);
-    }
+      setTimeout(() => this.respawn(), 5000);
   }
 
   respawn() {
-    if (this.scene.gameOver) return;
       this.sprite.setPosition(this.startX, this.startY);
       this.sprite.setVisible(true);
       
@@ -121,7 +117,6 @@ class Player {
       this.healthBar.width = 60;
       this.healthBar.setVisible(true);
       this.healthBarBackground.setVisible(true);
-      this.sprite.body.enable = true;
   
       this.isAlive = true;
   }
