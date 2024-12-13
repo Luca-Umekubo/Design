@@ -22,7 +22,7 @@ export default class GameScene extends Phaser.Scene {
 
         this.createPlatforms();
         this.player = new Player(this, 100, 450);
-        this.enemy = new Enemy(this, 600, 300, this.platforms);
+        this.enemy = new Enemy(this, 600, 300, this.platforms, this.difficulty);
 
         this.bullets = this.physics.add.group();
         this.setupBulletCollisions();

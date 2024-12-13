@@ -2,32 +2,46 @@ import BaseCharacter from './BaseCharacter.js';
 import config from '../config.js';
 
 export default class Enemy extends BaseCharacter {
-    constructor(scene, x, y, platforms) {
-        super(scene, x, y, 40, 40, config.enemyColor);
-
+    constructor(scene, x, y, platforms, difficulty) {
+        super(scene, x, y, 40, 40, 0x0000ff);
+        this.scene = scene;
         this.platforms = platforms;
+        this.difficulty = difficulty;    
+
         this.scene.physics.add.collider(this.sprite, this.platforms);
 
-        this.leftBound = x - 200;
+        this.leftBound = x - 450;
         this.rightBound = x + 200;
         this.movingRight = true;
-        this.speed = 125;
 
-        this.jumpInterval = 2500;
-        this.scene.time.addEvent({
+        if (this.difficulty === 'Easy') {
+            this.shootInterval = 500;
+            this.speed = 100;
+            this.jumpInterval = 3000;
+          } else if (this.difficulty === 'Normal') {
+            this.shootInterval = 200;
+            this.speed = 125;
+            this.jumpInterval = 2000;
+          } else if (this.difficulty === 'Hard') {
+            this.shootInterval = 130;
+            this.speed = 175;
+            this.jumpInterval = 1250;
+          }
+      
+          // Now use these values when setting up timers
+          this.scene.time.addEvent({
             delay: this.jumpInterval,
             loop: true,
             callback: this.jump,
             callbackScope: this
-        });
-
-        this.shootInterval = 200;
-        this.scene.time.addEvent({
+          });
+      
+          this.scene.time.addEvent({
             delay: this.shootInterval,
             loop: true,
             callback: this.shoot,
             callbackScope: this
-        });
+          });
     }
 
     shoot() {
