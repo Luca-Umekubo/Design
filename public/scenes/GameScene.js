@@ -8,6 +8,14 @@ export default class GameScene extends Phaser.Scene {
         super({ key: 'GameScene' });
     }
 
+    init(data) {
+        // Data contains chosen class and difficulty from ConfigScene
+        this.playerClass = data.class || 'Warrior';
+        this.difficulty = data.difficulty || 'Normal';
+
+        console.log(`Starting game with class: ${this.playerClass}, difficulty: ${this.difficulty}`);
+    }
+
     create() {
         this.timeLeft = 120;
         this.gameOver = false;
