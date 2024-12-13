@@ -1,11 +1,25 @@
 import BaseCharacter from './BaseCharacter.js';
 import config from '../config.js';
 
-export default class Player extends BaseCharacter {
-    constructor(scene, x, y) {
-        super(scene, x, y, 40, 40, config.playerColor);
+import SemiAutoRifle from '../weapons/SemiAutoRifle.js';
+import SniperRifle from '../weapons/SniperRifle.js';
+import Shotgun from '../weapons/Shotgun.js';
 
-        this.scene.physics.add.collider(this.sprite, this.scene.platforms);
+export default class Player extends BaseCharacter {
+    constructor(scene, x, y, playerClass) {
+        super(scene, x, y, 40, 40, config.playerColor);
+        
+        this.playerClass = playerClass;
+        scene.physics.add.collider(this.sprite, scene.platforms);
+
+        // Choose weapon based on class
+        if (this.playerClass === 'Commando') {
+            this.weapon = new SemiAutoRifle(scene, this);
+        } else if (this.playerClass === 'Deadeye') {
+            this.weapon = new SniperRifle(scene, this);
+        } else if (this.playerClass === 'Enforcer') {
+            this.weapon = new Shotgun(scene, this);
+        }
 
         this.cursors = scene.input.keyboard.addKeys({
             left: Phaser.Input.Keyboard.KeyCodes.A,
@@ -26,13 +40,6 @@ export default class Player extends BaseCharacter {
         });
     }
 
-    regenerateHealth() {
-        const timeSinceDamage = this.scene.time.now - this.lastDamageTime;
-        if (this.isAlive && this.currentHealth < this.maxHealth && timeSinceDamage >= this.damageCooldown) {
-            this.updateHealth(Math.min(this.currentHealth + this.regenAmount, this.maxHealth));
-        }
-    }
-
     updateHealth(newHealth) {
         const oldHealth = this.currentHealth;
         super.updateHealth(newHealth);
@@ -41,8 +48,15 @@ export default class Player extends BaseCharacter {
         }
     }
 
+    regenerateHealth() {
+        const timeSinceDamage = this.scene.time.now - this.lastDamageTime;
+        if (this.isAlive && this.currentHealth < this.maxHealth && timeSinceDamage >= this.damageCooldown) {
+            this.updateHealth(Math.min(this.currentHealth + this.regenAmount, this.maxHealth));
+        }
+    }
+
     update() {
-        super.update(); // positions health bar
+        super.update();
 
         if (!this.isAlive) {
             this.sprite.body.setVelocityX(0);

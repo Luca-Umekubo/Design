@@ -7,12 +7,12 @@ import GameOverScene from './scenes/GameOverScene.js';
 
 const gameConfig = {
     type: Phaser.AUTO,
-    width: 1000,
-    height: 600,
+    width: config.gameWidth,
+    height: config.gameHeight,
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 1200 },
+            gravity: { y: config.gravity },
             debug: false
         }
     },

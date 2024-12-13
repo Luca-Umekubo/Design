@@ -9,11 +9,8 @@ export default class GameScene extends Phaser.Scene {
     }
 
     init(data) {
-        // Data contains chosen class and difficulty from ConfigScene
-        this.playerClass = data.class || 'Warrior';
+        this.playerClass = data.class || 'Commando';
         this.difficulty = data.difficulty || 'Normal';
-
-        console.log(`Starting game with class: ${this.playerClass}, difficulty: ${this.difficulty}`);
     }
 
     create() {
@@ -21,7 +18,9 @@ export default class GameScene extends Phaser.Scene {
         this.gameOver = false;
 
         this.createPlatforms();
-        this.player = new Player(this, 100, 450);
+        this.player = new Player(this, 100, 450, this.playerClass);
+
+        // Pass difficulty to Enemy
         this.enemy = new Enemy(this, 600, 300, this.platforms, this.difficulty);
 
         this.bullets = this.physics.add.group();
@@ -29,7 +28,6 @@ export default class GameScene extends Phaser.Scene {
 
         this.hud = new HUD(this);
 
-        // Timer event
         this.time.addEvent({
             delay: 1000,
             loop: true,
@@ -37,8 +35,12 @@ export default class GameScene extends Phaser.Scene {
             callbackScope: this
         });
 
-        // Shooting input
-        this.input.on('pointerdown', this.handleShoot, this);
+        // Input for shooting now uses player's weapon
+        this.input.on('pointerdown', (pointer) => {
+            if (this.player.isAlive && this.player.weapon) {
+                this.player.weapon.shoot(pointer);
+            }
+        });
     }
 
     createPlatforms() {
@@ -49,9 +51,9 @@ export default class GameScene extends Phaser.Scene {
         this.platforms.add(ground);
 
         const platformPositions = [
-            {x: 200, y: 450}, 
-            {x: 600, y: 350},
-            {x: 400, y: 200}
+            { x: 200, y: 450 },
+            { x: 600, y: 350 },
+            { x: 400, y: 200 }
         ];
         platformPositions.forEach(pos => {
             const p = this.add.rectangle(pos.x, pos.y, 100, 20, config.platformColor);
@@ -62,30 +64,6 @@ export default class GameScene extends Phaser.Scene {
 
     setupBulletCollisions() {
         this.physics.add.collider(this.bullets, this.platforms, (bullet) => bullet.destroy());
-    }
-
-    handleShoot(pointer) {
-        if (!this.player.isAlive) return;
-
-        // Consider moving bullet creation into Player.shoot method later
-        const bullet = this.add.circle(this.player.sprite.x, this.player.sprite.y, 5, config.bulletColor);
-        this.physics.add.existing(bullet);
-        this.bullets.add(bullet);
-
-        const direction = new Phaser.Math.Vector2(
-            pointer.x - this.player.sprite.x,
-            pointer.y - this.player.sprite.y
-        ).normalize();
-
-        bullet.body.setVelocity(direction.x * 1000, direction.y * 1000).setAllowGravity(false);
-
-        this.physics.add.overlap(bullet, this.enemy.sprite, () => {
-            bullet.destroy();
-            this.enemy.updateHealth(this.enemy.currentHealth - 10);
-            if (this.enemy.currentHealth <= 0) {
-                this.player.incrementKills();
-            }
-        });
     }
 
     update() {
@@ -114,7 +92,6 @@ export default class GameScene extends Phaser.Scene {
         this.gameOver = true;
         this.physics.pause();
         this.input.off('pointerdown');
-        // Move the end screen logic to a separate GameOverScene or just show overlay and transition:
-        this.scene.start('GameOverScene', { player: this.player, enemy: this.enemy });
+        this.scene.start('GameOverScene', { player: this.player, enemy: this.enemy, settings: { class: this.playerClass, difficulty: this.difficulty } });
     }
 }
