@@ -1,321 +1,217 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fast-Paced 2D Platformer Shooter</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Phaser State Management</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
     <script src="Player.js"></script>
     <script src="Enemy.js"></script>
 </head>
 <body>
-    <script>
-        const config = {
-            type: Phaser.AUTO,
-            width: 1000,
-            height: 600,
-            physics: {
-                default: 'arcade',
-                arcade: {
-                    gravity: { y: 1200 },
-                    debug: false
-                }
-            },
-            scene: {
-                preload: preload,
-                create: create,
-                update: update
-            }
-        };
+<script>
+class GameScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'GameScene' });
+    }
 
-        const game = new Phaser.Game(config);
+    preload() {
+        // No external assets needed
+    }
 
-        let player;
-        let enemy;
-        let bullets;
-        let platforms;
+    create() {
+        // Reset game state variables
+        this.timeLeft = 120;
+        this.gameOver = false;
 
-        let timeLeft = 120; // 2 minutes in seconds
-        let timerText;
-        let killText;
-        let deathText;
-        let gameOver = false;
+        // Create platforms
+        this.platforms = this.physics.add.staticGroup();
+        const ground = this.add.rectangle(500, 580, 1000, 20, 0x00ff00);
+        this.physics.add.existing(ground, true);
+        this.platforms.add(ground);
 
-        function preload() {
-            // No external assets needed
-        }
+        const platform1 = this.add.rectangle(200, 450, 100, 20, 0x00ff00);
+        const platform2 = this.add.rectangle(600, 350, 100, 20, 0x00ff00);
+        const platform3 = this.add.rectangle(400, 200, 100, 20, 0x00ff00);
+        [platform1, platform2, platform3].forEach(platform => {
+            this.physics.add.existing(platform, true);
+            this.platforms.add(platform);
+        });
 
-        function create() {
-            // Platforms group
-            platforms = this.physics.add.staticGroup();
+        // Create player and enemy
+        this.player = new Player(this, 100, 450);
+        this.enemy = new Enemy(this, 600, 300, this.platforms);
 
-            // Ground and floating platforms
-            const ground = this.add.rectangle(400, 580, 10000, 20, 0x00ff00);
-            this.physics.add.existing(ground, true);
-            platforms.add(ground);
-
-            const platform1 = this.add.rectangle(200, 450, 100, 20, 0x00ff00);
-            const platform2 = this.add.rectangle(600, 350, 100, 20, 0x00ff00);
-            const platform3 = this.add.rectangle(400, 200, 100, 20, 0x00ff00);
-
-            [platform1, platform2, platform3].forEach(platform => {
-                this.physics.add.existing(platform, true);
-                platforms.add(platform);
-            });
-
-            this.platforms = platforms;
-
-            // Player instance
-            player = new Player(this, 100, 450);
-
-            // Enemy instance
-            enemy = new Enemy(this, 600, 300, platforms);
-
-            // Bullets group
-            bullets = this.physics.add.group();
-            this.physics.add.collider(bullets, platforms, bulletHitPlatform, null, this);
-
-            // Add text for Timer, Kill Counter, and Death Counter
-            timerText = this.add.text(this.cameras.main.width / 2, 20, '2:00', {
-                fontSize: '32px',
-                fill: '#00ff00'
-            }).setOrigin(0.5);
-
-            killText = this.add.text(this.cameras.main.width / 2, 60, 'Kill Counter: 0', {
-                fontSize: '24px',
-                fill: '#00ff00'
-            }).setOrigin(0.5);
-
-            deathText = this.add.text(this.cameras.main.width / 2, 100, 'Death Counter: 0', {
-                fontSize: '24px',
-                fill: '#00ff00'
-            }).setOrigin(0.5);
-
-            // Set up the countdown timer event
-            this.time.addEvent({
-                delay: 1000,
-                loop: true,
-                callback: () => {
-                    if (!gameOver) { // Only update the timer if the game is not over
-                        timeLeft--;
-                        if (timeLeft <= 0) {
-                            endGame(this); // Pass the current scene to `endGame`
-                        }
-                        let minutes = Math.floor(timeLeft / 60);
-                        let seconds = timeLeft % 60;
-                        timerText.setText(minutes + ':' + (seconds < 10 ? '0' + seconds : seconds));
-                    }
-                }
-            });
-
-            // Mouse click to shoot
-            this.input.on('pointerdown', (pointer) => {
-                if (player.isAlive) {
-                    const bullet = this.add.circle(player.sprite.x, player.sprite.y, 5, 0xffff00);
-                    this.physics.add.existing(bullet);
-                    bullets.add(bullet);
-
-                    const direction = new Phaser.Math.Vector2(pointer.x - player.sprite.x, pointer.y - player.sprite.y).normalize();
-                    const speed = 1000;
-                    bullet.body.setVelocity(direction.x * speed, direction.y * speed);
-                    bullet.body.allowGravity = false;
-
-                    // Add collision detection for the bullet hitting the enemy
-                    this.physics.add.overlap(bullet, enemy.sprite, () => {
-                        bullet.destroy();
-                        enemy.updateHealth(enemy.currentHealth - 10); // Example damage
-                        if (enemy.currentHealth <= 0) {
-                            
-                            player.incrementKills();
-                        }
-                    });
-                }
-            });
-        }
-
-        function update() {
-            // Update player
-            player.update();
-
-            // Update enemy
-            enemy.update();
-
-            // Update Kill and Death counters every frame from player's stats
-            killText.setText("Kill Counter: " + player.kills);
-            deathText.setText("Death Counter: " + player.deaths);
-
-            // Bullet cleanup
-            bullets.children.each((bullet) => {
-                if (bullet.active && (bullet.x < 0 || bullet.x > 800 || bullet.y < 0 || bullet.y > 600)) {
-                    bullet.destroy();
-                }
-            });
-        }
-
-        // Callback function for bullet-platform collision
-        function bulletHitPlatform(bullet, platform) {
+        // Create bullets
+        this.bullets = this.physics.add.group();
+        this.physics.add.collider(this.bullets, this.platforms, (bullet) => {
             bullet.destroy();
-        }
+        });
 
-        let endScreen; // End screen container
+        // UI
+        this.timerText = this.add.text(this.cameras.main.width / 2, 20, '2:00', {
+            fontSize: '32px',
+            fill: '#00ff00'
+        }).setOrigin(0.5);
 
-        function createEndScreen(scene) {
-            // Create the black background
-            const background = scene.add.rectangle(scene.cameras.main.width / 2, scene.cameras.main.height / 2, 800, 600, 0x000000).setOrigin(0.5);
-            background.setAlpha(0); // Start invisible
+        this.killText = this.add.text(this.cameras.main.width / 2, 60, 'Kill Counter: 0', {
+            fontSize: '24px',
+            fill: '#00ff00'
+        }).setOrigin(0.5);
 
-            // Create a container for the scoreboard
-            const container = scene.add.container(scene.cameras.main.width / 2 - 100, scene.cameras.main.height / 2).setAlpha(0).setScale(0);
+        this.deathText = this.add.text(this.cameras.main.width / 2, 100, 'Death Counter: 0', {
+            fontSize: '24px',
+            fill: '#00ff00'
+        }).setOrigin(0.5);
 
-            // Add a title
-            const title = scene.add.text(0, -250, 'GAME OVER', {
-                fontSize: '40px',
-                color: '#00ff00',
-                align: 'center'
-            }).setOrigin(0.5);
-            container.add(title);
-
-            // Add the player list
-            const players = [
-                { name: 'Player 1', kills: player.kills, deaths: player.deaths },
-                { name: 'Enemy', kills: enemy.kills, deaths: enemy.deaths }
-            ];
-            const maxNameLength = Math.max(...players.map(p => p.name.length));
-            const maxKDLength = Math.max(...players.map(p => `${(p.kills / Math.max(1, p.deaths)).toFixed(2)}`.length));
-            let offsetY = -200;
-
-            players.forEach((p, index) => {
-                const isPlayer = p.name === 'Player 1'; // Highlight the player row
-
-                const nameText = scene.add.text(-200, offsetY, p.name.padEnd(maxNameLength + 5), {
-                    fontSize: '20px',
-                    color: isPlayer ? '#00ff00' : '#ffffff'
-                }).setOrigin(0);
-                const statsText = scene.add.text(50, offsetY, `K: ${p.kills} | D: ${p.deaths} | K/D: ${(p.kills / Math.max(1, p.deaths)).toFixed(2)}`.padStart(maxKDLength), {
-                    fontSize: '20px',
-                    color: isPlayer ? '#00ff00' : '#ffffff'
-                }).setOrigin(0);
-                container.add(nameText);
-                container.add(statsText);
-                offsetY += 40;
-            });
-
-            // Add a restart button
-            const restartButton = scene.add.text(0, 200, 'Restart', {
-                fontSize: '30px',
-                color: '#00ff00',
-                backgroundColor: '#000000',
-                padding: { x: 10, y: 5 }
-            }).setOrigin(0.5).setInteractive();
-
-            restartButton.on('pointerdown', () => {
-                restartGame(scene); // Call the restartGame function
-            });
-
-            container.add(restartButton);
-
-            // Add container to the scene
-            scene.add.existing(container);
-
-            // Animate the appearance
-            scene.tweens.add({
-                targets: [background, container],
-                alpha: 1,
-                scale: 1,
-                duration: 500,
-                ease: 'Back.easeOut'
-            });
-
-            endScreen = container;
-        }
-
-        function endGame(scene) {
-            if (gameOver) return;
-            gameOver = true;
-            
-            // Stop physics and remove input events
-            scene.physics.pause();
-            scene.input.off('pointerdown');
-            
-            createEndScreen(scene);
-        }
-
-        // Replace the timer's callback
+        // Timer event for countdown
         this.time.addEvent({
             delay: 1000,
             loop: true,
             callback: () => {
-                timeLeft--;
-                if (timeLeft <= 0) {
-                    endGame();
+                if (!this.gameOver) {
+                    this.timeLeft--;
+                    if (this.timeLeft <= 0) {
+                        this.endGame();
+                    }
+                    let minutes = Math.floor(this.timeLeft / 60);
+                    let seconds = this.timeLeft % 60;
+                    this.timerText.setText(minutes + ':' + (seconds < 10 ? '0' + seconds : seconds));
                 }
-                let minutes = Math.floor(timeLeft / 60);
-                let seconds = timeLeft % 60;
-                timerText.setText(minutes + ':' + (seconds < 10 ? '0' + seconds : seconds));
             }
         });
 
-        function restartGame(scene) {
-            gameOver = false; // Reset the gameOver flag
-            timeLeft = 120; // Reset the timer to 2 minutes
+        // Input for shooting
+        this.input.on('pointerdown', (pointer) => {
+            if (this.player.isAlive) {
+                const bullet = this.add.circle(this.player.sprite.x, this.player.sprite.y, 5, 0xffff00);
+                this.physics.add.existing(bullet);
+                this.bullets.add(bullet);
 
-            // Remove all previous game objects
-            scene.children.removeAll(); // Removes all children, including platforms, text, and end screen
+                const direction = new Phaser.Math.Vector2(pointer.x - this.player.sprite.x, pointer.y - this.player.sprite.y).normalize();
+                const speed = 1000;
+                bullet.body.setVelocity(direction.x * speed, direction.y * speed);
+                bullet.body.allowGravity = false;
 
-            // Recreate platforms
-            platforms = scene.physics.add.staticGroup();
-            const ground = scene.add.rectangle(400, 580, 800, 20, 0x00ff00);
-            scene.physics.add.existing(ground, true);
-            platforms.add(ground);
-
-            const platform1 = scene.add.rectangle(200, 450, 100, 20, 0x00ff00);
-            const platform2 = scene.add.rectangle(600, 350, 100, 20, 0x00ff00);
-            const platform3 = scene.add.rectangle(400, 200, 100, 20, 0x00ff00);
-
-            [platform1, platform2, platform3].forEach(platform => {
-                scene.physics.add.existing(platform, true);
-                platforms.add(platform);
-            });
-
-            // Reset player
-            player = new Player(scene, 100, 450); // Recreate the player
-            player.kills = 0;
-            player.deaths = 0;
-
-            // Reset enemy
-            enemy = new Enemy(scene, 600, 300, platforms); // Recreate the enemy
-            enemy.kills = 0;
-            enemy.deaths = 0;
-
-            // Recreate bullets group
-            bullets = scene.physics.add.group();
-            scene.physics.add.collider(bullets, platforms, bulletHitPlatform, null, scene);
-
-            // Recreate UI text
-            timerText = scene.add.text(scene.cameras.main.width / 2, 20, '2:00', {
-                fontSize: '32px',
-                fill: '#00ff00'
-            }).setOrigin(0.5);
-
-            killText = scene.add.text(scene.cameras.main.width / 2, 60, 'Kill Counter: 0', {
-                fontSize: '24px',
-                fill: '#00ff00'
-            }).setOrigin(0.5);
-
-            deathText = scene.add.text(scene.cameras.main.width / 2, 100, 'Death Counter: 0', {
-                fontSize: '24px',
-                fill: '#00ff00'
-            }).setOrigin(0.5);
-
-            // Resume physics and game logic
-            scene.physics.resume();
-
-            // Destroy the end screen
-            if (endScreen) {
-                endScreen.destroy();
+                this.physics.add.overlap(bullet, this.enemy.sprite, () => {
+                    bullet.destroy();
+                    this.enemy.updateHealth(this.enemy.currentHealth - 10);
+                    if (this.enemy.currentHealth <= 0) {
+                        this.player.incrementKills();
+                    }
+                });
             }
-        }
+        });
+    }
 
-    </script>
+    update() {
+        if (!this.gameOver) {
+            this.player.update();
+            this.enemy.update();
+
+            // Update UI counters
+            this.killText.setText("Kill Counter: " + this.player.kills);
+            this.deathText.setText("Death Counter: " + this.player.deaths);
+
+            // Bullet cleanup
+            this.bullets.children.each((bullet) => {
+                if (bullet.active && (bullet.x < 0 || bullet.x > 1000 || bullet.y < 0 || bullet.y > 600)) {
+                    bullet.destroy();
+                }
+            });
+        }
+    }
+
+    endGame() {
+        if (this.gameOver) return;
+        this.gameOver = true;
+        this.physics.pause();
+        this.input.off('pointerdown');
+
+        this.createEndScreen();
+    }
+
+    createEndScreen() {
+        // Create the black background
+        const background = this.add.rectangle(this.cameras.main.width / 2, this.cameras.main.height / 2, 1000, 600, 0x000000).setOrigin(0.5);
+        background.setAlpha(0);
+
+        // Container for scoreboard
+        const container = this.add.container(this.cameras.main.width / 2 - 100, this.cameras.main.height / 2).setAlpha(0).setScale(0);
+
+        // Title
+        const title = this.add.text(0, -250, 'GAME OVER', {
+            fontSize: '40px',
+            color: '#00ff00',
+            align: 'center'
+        }).setOrigin(0.5);
+        container.add(title);
+
+        // Players stats
+        const players = [
+            { name: 'Player 1', kills: this.player.kills, deaths: this.player.deaths },
+            { name: 'Enemy', kills: this.enemy.kills, deaths: this.enemy.deaths }
+        ];
+        const maxNameLength = Math.max(...players.map(p => p.name.length));
+        let offsetY = -200;
+        players.forEach((p) => {
+            const isPlayer = p.name === 'Player 1';
+            const nameText = this.add.text(-200, offsetY, p.name, {
+                fontSize: '20px',
+                color: isPlayer ? '#00ff00' : '#ffffff'
+            }).setOrigin(0);
+            const statsText = this.add.text(50, offsetY, `K: ${p.kills} | D: ${p.deaths} | K/D: ${(p.kills / Math.max(1, p.deaths)).toFixed(2)}`, {
+                fontSize: '20px',
+                color: isPlayer ? '#00ff00' : '#ffffff'
+            }).setOrigin(0);
+            container.add(nameText);
+            container.add(statsText);
+            offsetY += 40;
+        });
+
+        // Restart button
+        const restartButton = this.add.text(0, 200, 'Restart', {
+            fontSize: '30px',
+            color: '#00ff00',
+            backgroundColor: '#000000',
+            padding: { x: 10, y: 5 }
+        }).setOrigin(0.5).setInteractive();
+
+        restartButton.on('pointerdown', () => {
+            // Instead of removing children and recreating, just restart the scene
+            this.scene.restart();
+        });
+
+        container.add(restartButton);
+
+        this.add.existing(container);
+
+        // Animate appearance
+        this.tweens.add({
+            targets: [background, container],
+            alpha: 1,
+            scale: 1,
+            duration: 500,
+            ease: 'Back.easeOut'
+        });
+    }
+}
+
+const config = {
+    type: Phaser.AUTO,
+    width: 1000,
+    height: 600,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 1200 },
+            debug: false
+        }
+    },
+    scene: [GameScene]
+};
+
+const game = new Phaser.Game(config);
+</script>
 </body>
 </html>
